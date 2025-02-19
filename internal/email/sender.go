@@ -18,7 +18,6 @@ import (
 // Sender определяет интерфейс для отправки электронной почты
 type Sender interface {
 	Send(to, subject, body string, attachmentFilePaths []string) error
-	Close() error
 }
 
 // SMTPSender реализует интерфейс Sender и отправляет почту через SMTP
@@ -27,59 +26,57 @@ type SMTPSender struct {
 	port     string
 	username string
 	password string
-	client   *smtp.Client
 }
 
 // NewSmtpEmailSender создает новый экземпляр SmtpEmailSender
 func NewSMTPSender(host, port, username, password string) (*SMTPSender, error) {
-	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", host, port), nil)
-	if err != nil {
-		return nil, fmt.Errorf("error connecting to SMTP server: %v", err)
-	}
-
-	client, err := smtp.NewClient(conn, host)
-	if err != nil {
-		return nil, fmt.Errorf("error creating SMTP client: %v", err)
-	}
-
-	auth := smtp.PlainAuth("", username, password, host)
-	if err := client.Auth(auth); err != nil {
-		return nil, fmt.Errorf("error authenticating SMTP: %v", err)
-	}
-
 	return &SMTPSender{
 		host:     host,
 		port:     port,
 		username: username,
 		password: password,
-		client:   client,
 	}, nil
 }
 
 // Send отправляет электронное письмо
-func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string) error {
+func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string) error {	
 	log.Println("Начинаем отправку письма...")
 
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", s.host, s.port), nil)
+	if err != nil {
+		return fmt.Errorf("error connecting to SMTP server: %v", err)
+	}
+
+	client, err := smtp.NewClient(conn, s.host)
+	if err != nil {
+		return fmt.Errorf("error creating SMTP client: %v", err)
+	}
+
+	auth := smtp.PlainAuth("", s.username, s.password, s.host)
+	if err := client.Auth(auth); err != nil {
+		return fmt.Errorf("error authenticating SMTP: %v", err)
+	}
+
 	// Проверяем соединение
-	if err := s.client.Noop(); err != nil {
+	if err := client.Noop(); err != nil {
 		return fmt.Errorf("error checking SMTP connection: %v", err)
 	}
 	log.Println("Соединение с SMTP активно")
 
 	// Указываем отправителя
-	if err := s.client.Mail(s.username); err != nil {
+	if err := client.Mail(s.username); err != nil {
 		return fmt.Errorf("error setting sender in SMTP client: %v", err)
 	}
 	log.Println("Отправитель установлен:", s.username)
 
 	// Указываем получателя
-	if err := s.client.Rcpt(to); err != nil {
+	if err := client.Rcpt(to); err != nil {
 		return fmt.Errorf("error setting recipient in SMTP client: %v", err)
 	}
 	log.Println("Получатель установлен:", to)
 
 	// Получаем writer для сообщения
-	w, err := s.client.Data()
+	w, err := client.Data()
 	if err != nil {
 		return fmt.Errorf("error getting SMTP writer: %v", err)
 	}
@@ -98,15 +95,12 @@ func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string
 		return fmt.Errorf("error writing data to SMTP writer: %v", err)
 	}
 
-	log.Println("Письмо отправлено!")
-	return nil
-}
-
-// Close закрывает SMTP-клиент
-func (s *SMTPSender) Close() error {
-	if quitErr := s.client.Quit(); quitErr != nil {
+	if quitErr := client.Quit(); quitErr != nil {
 		return fmt.Errorf("error closing SMTP client: %v", quitErr)
 	}
+
+	log.Println("Письмо отправлено!")
+
 	return nil
 }
 
@@ -116,7 +110,7 @@ func (s *SMTPSender) createMessage(to, subject, body string, attachmentFilePaths
 
 	// Заголовки письма
 	headers := fmt.Sprintf(
-		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=%q\r\n\r\n", 
+		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=%q\r\n\r\n",
 		s.username, to, subject, writer.Boundary(),
 	)
 	msg.WriteString(headers)

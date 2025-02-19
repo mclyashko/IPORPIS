@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	fyne.io/fyne/v2 v2.5.4
 	github.com/joho/godotenv v1.5.1
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6
 )
 
 require (

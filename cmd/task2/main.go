@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/exp/rand"
 
 	"github.com/mclyashko/IPORPIS/internal/email"
 )
@@ -148,6 +150,8 @@ func createEmailUI(_ fyne.App, w fyne.Window, sender email.Sender) {
 
 // Основная функция
 func main() {
+	rand.Seed(uint64(time.Now().UnixNano()))
+
 	a := app.NewWithID("com.mclyashko.email_sender")
 	w := a.NewWindow("Email Sender")
 

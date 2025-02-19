@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/exp/rand"
 
 	"github.com/mclyashko/IPORPIS/internal/config"
 	"github.com/mclyashko/IPORPIS/internal/email"
@@ -73,6 +75,8 @@ func createUI(es email.Sender) {
 }
 
 func main() {
+	rand.Seed(uint64(time.Now().UnixNano()))
+ 
 	cfg := getConfig()
 	es, err := email.NewSMTPSender(
 		cfg.Email.Host,
@@ -83,7 +87,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Cant get SMTP sender: %v", err)
 	}
-	defer es.Close()
 
 	createUI(es)
 }
