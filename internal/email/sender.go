@@ -13,6 +13,7 @@ import (
 	"net/textproto"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Sender определяет интерфейс для отправки электронной почты
@@ -39,7 +40,7 @@ func NewSMTPSender(host, port, username, password string) (*SMTPSender, error) {
 }
 
 // Send отправляет электронное письмо
-func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string) error {	
+func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string) error {
 	log.Println("Начинаем отправку письма...")
 
 	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", s.host, s.port), nil)
@@ -95,7 +96,7 @@ func (s *SMTPSender) Send(to, subject, body string, attachmentFilePaths []string
 		return fmt.Errorf("error writing data to SMTP writer: %v", err)
 	}
 
-	if quitErr := client.Quit(); quitErr != nil {
+	if quitErr := client.Quit(); quitErr != nil && !strings.Contains(quitErr.Error(), "250") {
 		return fmt.Errorf("error closing SMTP client: %v", quitErr)
 	}
 

@@ -12,8 +12,9 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/mclyashko/IPORPIS/internal/email"
 	"golang.org/x/exp/rand"
+
+	"github.com/mclyashko/IPORPIS/internal/email"
 )
 
 // Первый этап: Ввод данных для создания SMTP Sender

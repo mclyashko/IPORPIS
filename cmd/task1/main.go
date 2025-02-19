@@ -76,7 +76,7 @@ func createUI(es email.Sender) {
 
 func main() {
 	rand.Seed(uint64(time.Now().UnixNano()))
- 
+
 	cfg := getConfig()
 	es, err := email.NewSMTPSender(
 		cfg.Email.Host,
