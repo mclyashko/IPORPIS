@@ -1,0 +1,19 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16
+    command: ["postgres", "-c", "log_statement=all"]
+    volumes:
+      - ./env/postgres/pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: task
+    restart: always
+    healthcheck:
+      test: pg_isready -d task -U user
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    ports:
+      - "5432:5432"
